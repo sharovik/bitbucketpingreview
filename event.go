@@ -86,11 +86,11 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 		return message, nil
 	}
 
-	toNotify := prepareListToNotify(foundPullRequests.Items, message.Channel)
+	toNotify := prepareListToNotify(foundPullRequests.Items, message.OriginalMessage.User)
 
 	var notifiedReviewersList []string
 	for user, toReview := range toNotify {
-		userUUID := notifyReviewer(user, toReview, message.Channel)
+		userUUID := notifyReviewer(user, toReview, message.OriginalMessage.User)
 		if userUUID == "" {
 			continue
 		}
