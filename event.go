@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -276,17 +277,17 @@ func (e EventStruct) Update() error {
 }
 
 func SendMessageToTheChannel(channel string, text string) {
-	//_, _, err := container.C.MessageClient.SendMessage(dto.SlackRequestChatPostMessage{
-	//	Channel:           channel,
-	//	Text:              text,
-	//	AsUser:            true,
-	//	Ts:                time.Time{},
-	//	DictionaryMessage: dto.DictionaryMessage{},
-	//	OriginalMessage:   dto.SlackResponseEventMessage{},
-	//})
-	//if err != nil {
-	//	log.Logger().AddError(err).Str("text", text).Msg("Failed to send a message to the channel")
-	//}
+	_, _, err := container.C.MessageClient.SendMessage(dto.SlackRequestChatPostMessage{
+		Channel:           channel,
+		Text:              text,
+		AsUser:            true,
+		Ts:                time.Time{},
+		DictionaryMessage: dto.DictionaryMessage{},
+		OriginalMessage:   dto.SlackResponseEventMessage{},
+	})
+	if err != nil {
+		log.Logger().AddError(err).Str("text", text).Msg("Failed to send a message to the channel")
+	}
 }
 
 func isPRMerged(info dto.BitBucketPullRequestInfoResponse) bool {
