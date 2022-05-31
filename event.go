@@ -21,7 +21,7 @@ const (
 	EventName = "bitbucketpingreview"
 
 	//EventVersion the version of the event
-	EventVersion = "1.0.0"
+	EventVersion = "1.0.3"
 
 	helpMessage = "Ask me `ping reviewers for {PULL_REQUEST_1} {PULL_REQUEST_2} ... {PULL_REQUEST_N}` and I will ask the reviewers to review your pull-requests."
 
@@ -112,6 +112,10 @@ func notifyReviewer(displayName string, toReview []string, fallbackChannelID str
 	if uuid == "" {
 		SendMessageToTheChannel(fallbackChannelID, fmt.Sprintf("Failed to notify user `%s`. It looks like his bitbucket profile is out of sync with Slack profile.", displayName))
 		return
+	}
+
+	if uuid == fallbackChannelID {
+		return ""
 	}
 
 	SendMessageToTheChannel(uuid, fmt.Sprintf("Hey <@%s>,\nUser <@%s> asked me to ping you regarding review for the next PR's: %s \nThanks!", uuid, fallbackChannelID, strings.Join(toReview, ",\n")))
