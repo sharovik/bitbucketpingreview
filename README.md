@@ -1,5 +1,5 @@
 # Bitbucket ping reviewers
-Sometimes happens, that your Pull-request for some reason miss the review. In that case you always need to go to each user and ping them manually. I introduced a new event, which can help you with that. Just type `ping revewers {PULL_REQUESTS_LIST}` and devbot will ping the reviewers in slack to review these PR's.
+Sometimes happens, that your Pull-request for some reason miss the review. In that case you always need to go to each user and ping them manually. I introduced a new event for [devbot application](https://github.com/sharovik/devbot), which can help you with that. Just type `ping revewers {PULL_REQUESTS_LIST}` and [devbot](https://github.com/sharovik/devbot) will ping the reviewers in slack to review these PR's.
 
 ## Installation guide
 To install it please run 
