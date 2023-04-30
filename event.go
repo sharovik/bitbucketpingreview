@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/sharovik/devbot/events/bitbucketpingreview/bitbucketpingreview_dto"
 	"github.com/sharovik/devbot/internal/database"
-	"github.com/sharovik/devbot/internal/helper"
 	"regexp"
 	"strconv"
 	"strings"
@@ -21,36 +20,41 @@ const (
 	EventName = "bitbucketpingreview"
 
 	//EventVersion the version of the event
-	EventVersion = "1.0.3"
+	EventVersion = "1.0.4"
 
 	helpMessage = "Ask me `ping reviewers for {PULL_REQUEST_1} {PULL_REQUEST_2} ... {PULL_REQUEST_N}` and I will ask the reviewers to review your pull-requests."
 
 	pullRequestStringAnswer   = "I found the next pull-requests:\n"
 	noPullRequestStringAnswer = `I can't find any pull-request in your message`
 
-	pullRequestStateOpen   = "OPEN"
+	pullRequestStateOpen = "OPEN"
 
 	pullRequestMinApprovals = 2
 
 	pullRequestsRegex = `(?m)https:\/\/bitbucket.org\/(?P<workspace>\w+)\/(?P<repository_slug>[a-zA-Z0-9-_]+)\/pull-requests\/(?P<pull_request_id>\d+)`
 )
 
-//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
-//Event - object which is ready to use
-var Event = EventStruct{
-	EventName: EventName,
+func (e EventStruct) Help() string {
+	return helpMessage
 }
 
-//ReceivedPullRequests struct for pull-requests list
+func (e EventStruct) Alias() string {
+	return EventName
+}
+
+// Event - object which is ready to use
+var Event = EventStruct{}
+
+// ReceivedPullRequests struct for pull-requests list
 type ReceivedPullRequests struct {
 	Items []bitbucketpingreview_dto.PullRequest
 }
 
-//PullRequest the pull-request item
+// PullRequest the pull-request item
 type PullRequest struct {
 	ID             int64
 	RepositorySlug string
@@ -62,18 +66,8 @@ type PullRequest struct {
 
 var availableUsers dto.SlackResponseUsersList
 
-//Execute method which is called by message processor
+// Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
 	loadAvailableChannels()
 
 	//First we need to find all the pull-requests in received message
@@ -254,40 +248,43 @@ func receivedPullRequestsText(foundPullRequests ReceivedPullRequests) string {
 	return pullRequestsString
 }
 
-//Install method for installation of event
+// Install method for installation of event
 func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	if err := container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "ping reviewers",
-				Answer:        "One moment please",
 				QuestionRegex: "(?i)(ping reviewers)",
-				QuestionGroup: "",
+				Answer:        "One moment please",
 			},
 		},
-	})
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-//Update for event update actions
+// Update for event update actions
 func (e EventStruct) Update() error {
 	return nil
 }
 
 func SendMessageToTheChannel(channel string, text string) {
-	_, _, err := container.C.MessageClient.SendMessage(dto.SlackRequestChatPostMessage{
+	_, _, err := container.C.MessageClient.SendMessage(dto.BaseChatMessage{
 		Channel:           channel,
 		Text:              text,
 		AsUser:            true,
 		Ts:                time.Time{},
 		DictionaryMessage: dto.DictionaryMessage{},
-		OriginalMessage:   dto.SlackResponseEventMessage{},
+		OriginalMessage:   dto.BaseOriginalMessage{},
 	})
 	if err != nil {
 		log.Logger().AddError(err).Str("text", text).Msg("Failed to send a message to the channel")
