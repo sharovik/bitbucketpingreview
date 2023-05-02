@@ -292,5 +292,5 @@ func SendMessageToTheChannel(channel string, text string) {
 }
 
 func isPRMerged(info dto.BitBucketPullRequestInfoResponse) bool {
-	return info.State == pullRequestStateOpen
+	return info.State != pullRequestStateOpen
 }
